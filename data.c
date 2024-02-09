@@ -17,8 +17,6 @@ closedata(Datactl *dc)
 static void
 _dataproc(void *arg)
 {
-	/* Send back all of our tokens in place on the channel */
-	/* Send clearcode on start */
 	Datactl *dc;
 	//int m;
 	//char buf[8096];
@@ -26,6 +24,8 @@ _dataproc(void *arg)
 	dc = arg;
 	threadsetname("dataproc");
 	
+	/* TODO: send() -1 in counter as first token, with empty string data */
+
 	/* Attempt to seek to last section, if too small just seek start */
 	if(seek(dc->feed, -8096, 1) < 0)
 		seek(dc->feed, 0, 0);
@@ -45,7 +45,7 @@ initdata(char *mntpt)
 	dc = mallocz(sizeof(Datactl), 1);
 	if(dc == nil)
 		return nil;
-	t = malloc(strlen(mntpt)+20);
+	t = malloc(strlen(mntpt)+5);
 	sprint(t, "%s/ctrl", mntpt);
 	if((dc->ctl = open(t, ORDWR)) < 0){
 		free(t);
@@ -64,9 +64,24 @@ initdata(char *mntpt)
 }
 
 int
+tobuffer(Datactl *dc, char *name)
+{
+	char *s;
+	int n;
+
+	s = malloc(strlen(name)+7);
+	sprint(s, "buffer %s", name)
+	n = write(dc->ctl, s, strlen(s));
+	threadint(dc->pid);
+	free(s)
+
+	/* Start a brand new proc for the new buffer */
+	dc->pid = proccreate(_dataproc, dc, 4096);
+	return n;
+}
+
+int
 ctldata(Datactl *dc, char *m)
 {
-	/* TODO: Parse command, if it's a buffer command we kill dc->pid and restart ioproc */
-	//threadint(dc->pid);
 	return write(dc->ctl, m, strlen(m));
 }

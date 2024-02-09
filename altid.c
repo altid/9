@@ -36,6 +36,8 @@ redraw(void)
 	/* TODO: Buflist shown along the top, clickable */
 	/* TODO: Title gets prepended to the data, status inline for feeds? */
 	for(tab = tabs; tab != nil; tab = tab->next) {
+		// TODO: Move p along x, see if it fits, move along y
+		//       if tab->data has a newline, wrap at that char?
 		string(screen, p, tab->color, ZP, f, tab->data);
 	}
 	p.y += f->height;
@@ -53,14 +55,18 @@ usage(void)
 void
 threadmain(int argc, char *argv[])
 {
+	/* Network data */
 	Datactl *dctl;
 	Data *d, *ep;
 	Tabsctl *tctl;
 	Tabs *t, *tp;
+
+	/* Periphery */
 	Keyboardctl *kctl;
 	Rune key;
 	Mousectl *mctl;
 	Mouse m;
+
 	int fd;
 	char *mntpt = "/mnt/altid";
 
@@ -109,7 +115,7 @@ threadmain(int argc, char *argv[])
 	enum { ADATA, ATABS, AKBD, AMOUSE, ARESIZE, AEND };
 	Alt alts[] = {
 		[ADATA]	{ dctl->c,		&d,	CHANRCV },
-		//[ATABS]    { tctl->c,		&t,	CHANRCV },
+		[ATABS]    { tctl->c,		&t,	CHANRCV },
 		[AKBD]	{ kctl->c,		&key,	CHANRCV },
 		[AMOUSE]	{ mctl->c,	&m,	CHANRCV },
 		[ARESIZE]	{ mctl->resizec,	nil,	CHANRCV },
@@ -122,10 +128,11 @@ threadmain(int argc, char *argv[])
 		switch(alt(alts)){
 		case ADATA:
 			if(d->counter == -1){
-				/* Or similar */
-				for(ep = data->next; ep != nil; ep = ep->next)
+				while(data != nil){
+					ep = data;
+					data = data->next;
 					free(ep);
-				free(data);
+				}
 				data = d;
 				ep = d;
 			} else {
@@ -134,10 +141,14 @@ threadmain(int argc, char *argv[])
 			}
 			redraw();
 			break;
-/*
+
 		case ATABS:
 			if(t->index == -1){
-				//freetabs(tabs);
+				while(tabs != nil){
+					tp = tabs;
+					tabs = tabs->next;
+					free(tp);
+				}
 				tabs = t;
 				tp = t;
 			} else {
@@ -146,7 +157,7 @@ threadmain(int argc, char *argv[])
 			}
 			redraw();
 			break;
-*/
+
 		case AKBD:
 			if(key == Kdel){
 				unmount("", mntpt);

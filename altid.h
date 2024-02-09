@@ -1,5 +1,3 @@
-/* Token type */
-
 typedef struct Datactl Datactl;
 typedef struct Tabsctl Tabsctl;
 typedef struct Data Data;
@@ -59,5 +57,6 @@ struct	Tabs
 Tabsctl*	inittabs(char *);
 Datactl*	initdata(char *);
 int	ctldata(Datactl *, char *);
+int tobuffer(Datactl *, char *);
 void	closedata(Datactl *);
 void	closetabs(Tabsctl *);
