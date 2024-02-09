@@ -70,10 +70,10 @@ tobuffer(Datactl *dc, char *name)
 	int n;
 
 	s = malloc(strlen(name)+7);
-	sprint(s, "buffer %s", name)
+	sprint(s, "buffer %s", name);
 	n = write(dc->ctl, s, strlen(s));
 	threadint(dc->pid);
-	free(s)
+	free(s);
 
 	/* Start a brand new proc for the new buffer */
 	dc->pid = proccreate(_dataproc, dc, 4096);
